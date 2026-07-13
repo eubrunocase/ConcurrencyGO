@@ -3,6 +3,7 @@ package fetcher
 import (
 	"math/rand"
 	"time"
+	"sync"
 )
 
 func FetchPriceFromSite1() float64 {
@@ -18,4 +19,21 @@ func FetchPriceFromSite2() float64 {
 func FetchPriceFromSite3() float64 {
 	time.Sleep(3 * time.Second)
 	return rand.Float64() * 100
+}
+
+func FectchPrices(priceChannel chan<- float64) {
+	var wg sync.WaitGroup
+	wg.Add(3)
+	go func() {
+		priceChannel <- FetchPriceFromSite1()
+	}()
+	go func() {
+		defer wg.Done()
+		priceChannel <- FetchPriceFromSite2()
+	}()
+	go func() {
+		defer wg.Done()
+		priceChannel <- FetchPriceFromSite3()
+	}()
+	wg.Wait()
 }

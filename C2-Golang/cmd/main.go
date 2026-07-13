@@ -2,37 +2,26 @@ package main
 
 import (
 	"C2-Golang/internal/fetcher"
+	"C2-Golang/internal/processor"
 	"fmt"
 	"sync"
 	"time"
-	"C2-Golang/internal/processor"
 )
 
 func main() {
 	start := time.Now()
 
 	priceChannel := make(chan float64)
-	var wg sync.WaitGroup
-	wg.Add(3)
+	var showWg sync.WaitGroup
+	showWg.Add(1)
 
 	go func() {
+		defer showWg.Done()
 		processor.ShowPricesAVG(priceChannel)
-		}()
-
-	go func() {
-		defer wg.Done()
-		priceChannel <- fetcher.FetchPriceFromSite1()
-	}()
-	go func() {
-		defer wg.Done()
-		priceChannel <- fetcher.FetchPriceFromSite2()
-	}()
-	go func() {
-		defer wg.Done()
-		priceChannel <- fetcher.FetchPriceFromSite3()
 	}()
 
-	wg.Wait()
-	close(priceChannel)
+	go fetcher.FectchPrices(priceChannel)
+
+	showWg.Wait()
 	fmt.Printf("Tempo total: %s\n", time.Since(start))
 }
